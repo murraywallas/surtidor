@@ -258,6 +258,60 @@ async function mapearQ8(datos) {
   });
 }
 
+// --- Circle K / INGO ---------------------------------------------
+// VERIFICADO en vivo (403 estaciones: ~207 Circle K + ~196 INGO). Un
+// solo feed para las dos marcas, que comparten infraestructura —igual
+// que Q8/F24. La marca sale del campo `name`.
+//
+// Dos particularidades:
+//   1. Header OBLIGATORIO `X-App-Name: PRICES` (no es una key secreta,
+//      es un identificador fijo que documenta la propia API).
+//   2. Tampoco trae coordenadas, pero sí calle, ciudad y código postal
+//      en campos separados, así que geolocalizamos por código postal
+//      con la misma tabla que Q8.
+//
+// Circle K vende su línea "miles" (miles 95, miles diesel) y variantes
+// premium "miles+/milesPLUS". El clasificador se queda con la estándar,
+// que es la que interesa comparar.
+async function mapearCircleK(datos) {
+  const geo = await centroidesPostales();
+  const sites = (datos && datos.sites) || [];
+
+  return sites.map(e => {
+    const esIngo = /^ingo/i.test(e.name || "");
+    const a = e.address || {};
+    const postalCode = /^\d{4}$/.test(String(a.postalCode || "")) ? String(a.postalCode) : "";
+    const centro = geo[postalCode];
+
+    return {
+      stationId:   `${esIngo ? "INGO" : "CK"}-${e.id}`,
+      brand:       esIngo ? "INGO" : "Circle K",
+      owner:       esIngo ? "Ingo Danmark" : "Circle K Danmark A/S",
+      street:      a.street || "",
+      houseNumber: "",
+      postalCode,
+      city:        a.city || (centro && centro.navn) || "",
+      coordinates: {
+        latitude:  centro ? centro.lat : null,
+        longitude: centro ? centro.lng : null,
+      },
+      prices: (e.fuelPrices || []).map(p => {
+        const tipo = clasificarProducto(p.displayName);
+        if (!tipo) return null;
+        return {
+          fuelType:    tipo.fuelType,
+          octane:      tipo.octane,
+          premium:     tipo.premium,
+          productName: p.displayName,
+          price:       num(p.price),
+          currency:    p.currency || "DKK",
+          lastUpdated: p.lastUpdated,
+        };
+      }).filter(p => p && p.price !== null),
+    };
+  });
+}
+
 // ===================================================================
 // 3. FUENTES
 // -------------------------------------------------------------------
@@ -284,6 +338,14 @@ const FUENTES = [
     url: "https://beta.q8.dk/Station/GetStationPrices?page=1&pageSize=2000",
     key: null,                       // pública, sin autenticación
     mapear: mapearQ8,                // trae Q8 + F24, geolocalizadas por código postal
+    activa: true,
+  },
+  {
+    marca: "Circle K / INGO",
+    url: "https://api.circlek.com/eu/prices/v1/fuel/countries/DK",
+    key: null,                       // pública; solo pide el header X-App-Name
+    headers: { "X-App-Name": "PRICES" },
+    mapear: mapearCircleK,           // trae Circle K + INGO, geolocalizadas por código postal
     activa: true,
   },
   {
@@ -314,6 +376,7 @@ async function obtener(fuente) {
   try {
     const headers = { Accept: "application/json" };
     if (fuente.key) headers.Authorization = `Bearer ${fuente.key}`;
+    if (fuente.headers) Object.assign(headers, fuente.headers);   // headers fijos (ej. X-App-Name)
 
     const respuesta = await fetch(fuente.url, {
       headers,

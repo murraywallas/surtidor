@@ -40,10 +40,18 @@ Dos razones:
 |---|---|---|
 | OK | Verificada en vivo | No necesita |
 | Shell | Verificada en vivo | No necesita |
-| Q8 | Sin verificar, usa mapeador genérico | No necesita |
+| Q8 + F24 | Verificada en vivo, geolocalizada por código postal | No necesita |
+| Circle K + INGO | Verificada en vivo, geolocalizada por código postal | Header `X-App-Name: PRICES` |
 | Go'on | Pendiente de key | `GOON_KEY` |
 
-Faltan INGO, Circle K, Uno-X y OIL!. El rastreador de
+Q8/F24 y Circle K/INGO comparten cada uno un solo feed para sus dos marcas,
+y ninguno trae coordenadas: se geolocalizan por código postal contra el
+registro oficial danés ([dataforsyningen](https://api.dataforsyningen.dk/postnumre)),
+así que la ubicación es a nivel de código postal, no exacta.
+
+Faltan **Uno-X** (su API pide un Bearer token que todavía no liberaron) y
+**OIL!** (fija un único precio nacional diario; su API se esperaba para
+Q1 2026). El rastreador de
 [benzinpriser.io](https://benzinpriser.io/2025/12/19/the-danish-fuel-price-api-announcement-tracker/)
 lleva la cuenta de cuáles fueron publicando su API.
 

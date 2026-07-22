@@ -127,6 +127,27 @@
   .ctl[aria-pressed="true"]{background:var(--ink);color:var(--paper-2);border-color:var(--ink);}
   .ctl[disabled]{opacity:.45;cursor:not-allowed;}
 
+  /* Panel de rango de distancia (aparece al elegir "Distancia") */
+  .distrange{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin-top:11px;padding-top:11px;border-top:1px solid var(--line);
+  }
+  .distrange-label{
+    font-family:var(--numeric);font-size:10px;letter-spacing:.09em;
+    text-transform:uppercase;color:rgba(15,38,46,.55);
+  }
+  .distrange-in{
+    width:70px;background:#fff;border:1.5px solid var(--line-strong);
+    border-radius:7px;padding:7px 9px;font-size:14px;
+  }
+  .distrange-in:focus{outline:none;border-color:var(--ink);}
+  .distrange-dash{color:rgba(15,38,46,.5);}
+  .distrange-unit{font-size:12.5px;color:rgba(15,38,46,.6);}
+  .distrange-clear{
+    font-size:12px;font-weight:600;color:var(--dear);
+    text-decoration:underline;text-underline-offset:2px;padding:4px 2px;
+  }
+
   /* ---------- Tabs ---------- */
   .tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin:28px 0 22px;}
   .tab{
@@ -167,16 +188,19 @@
   .info{min-width:0;}
   .info .brandline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
   .logo{
-    width:28px;height:28px;border-radius:7px;flex-shrink:0;
-    object-fit:contain;background:#fff;
+    width:40px;height:40px;border-radius:9px;flex-shrink:0;
+    object-fit:contain;background:#fff;padding:3px;
     box-shadow:inset 0 0 0 1px var(--line);
   }
   .logo-sigla{
     display:inline-flex;align-items:center;justify-content:center;
-    color:#fff;box-shadow:none;
-    font-family:var(--numeric);font-size:9px;font-weight:700;
+    color:#fff;box-shadow:none;padding:0;
+    font-family:var(--numeric);font-size:12px;font-weight:700;
     letter-spacing:.01em;
   }
+  /* En la tabla de cadenas la fila es angosta: ahí el logo va más chico. */
+  .chainrow .logo{width:28px;height:28px;border-radius:7px;padding:2px;}
+  .chainrow .logo-sigla{font-size:9px;}
   .brandname{
     font-family:var(--numeric);font-size:10.5px;font-weight:600;
     letter-spacing:.07em;text-transform:uppercase;
@@ -534,7 +558,7 @@ const sinPersonal = s => SIN_PERSONAL.includes(s.brand);
 const MARCAS = {
   "OK":       {archivo:"ok.png",      color:"#B3402F", sigla:"OK"},
   "Shell":    {archivo:"shell.webp",  color:"#C99A00", sigla:"SH"},
-  "Q8":       {archivo:"q8.svg",      color:"#7A3E8F", sigla:"Q8"},
+  "Q8":       {archivo:"q8.png",      color:"#7A3E8F", sigla:"Q8"},
   "F24":      {archivo:"f24.svg",     color:"#2E6FA8", sigla:"F24"},
   "Circle K": {archivo:"circlek.svg", color:"#D0563C", sigla:"CK"},
   "Uno-X":    {archivo:"unox.svg",    color:"#1F6F5C", sigla:"UX"},
@@ -706,6 +730,8 @@ function App(){
   const [fuelKey,setFuel]  = useState("95");
   const [tab,setTab]       = useState("stations");
   const [sort,setSort]     = useState("price");
+  const [distMin,setDistMin] = useState("");   // rango de distancia en km (texto del input)
+  const [distMax,setDistMax] = useState("");
   const [query,setQuery]   = useState("");
   const [origin,setOrigin] = useState(null);
   const [geoState,setGeo]  = useState("idle");
@@ -783,6 +809,13 @@ function App(){
       list = list.filter(s =>
         (s.city + " " + s.postalCode + " " + s.street + " " + s.brand).toLowerCase().includes(q));
     }
+
+    /* Rango de distancia en km. Se mide desde tu ubicación si la
+       compartiste, o desde el centro de Copenhague si no. */
+    const dmin = parseFloat(distMin), dmax = parseFloat(distMax);
+    if(!Number.isNaN(dmin)) list = list.filter(s => s.distance >= dmin);
+    if(!Number.isNaN(dmax)) list = list.filter(s => s.distance <= dmax);
+
     if(onlyFavs) list = list.filter(s=>favs.includes(s.stationId));
 
     list = list.filter(s => priceFor(s,fuel));
@@ -792,7 +825,7 @@ function App(){
       return priceFor(a,fuel).price - priceFor(b,fuel).price;
     });
     return list;
-  },[raw,query,sort,origin,fuel,onlyFavs,favs]);
+  },[raw,query,sort,origin,fuel,onlyFavs,favs,distMin,distMax]);
 
   const cheapestId = useMemo(()=>{
     if(!stations.length) return null;
@@ -856,6 +889,26 @@ function App(){
             ★ {favs.length || ""}
           </button>
         </div>
+
+        {sort==="distance" &&
+          <div className="wrap distrange">
+            <span className="distrange-label">Rango</span>
+            <input type="number" min="0" step="1" inputMode="decimal"
+                   className="distrange-in" placeholder="mín"
+                   value={distMin} onChange={e=>setDistMin(e.target.value)}
+                   aria-label="Distancia mínima en kilómetros"/>
+            <span className="distrange-dash">–</span>
+            <input type="number" min="0" step="1" inputMode="decimal"
+                   className="distrange-in" placeholder="máx"
+                   value={distMax} onChange={e=>setDistMax(e.target.value)}
+                   aria-label="Distancia máxima en kilómetros"/>
+            <span className="distrange-unit">
+              km {origin ? "de tu ubicación" : "del centro de Copenhague"}
+            </span>
+            {(distMin!=="" || distMax!=="") &&
+              <button className="distrange-clear"
+                      onClick={()=>{setDistMin("");setDistMax("");}}>Limpiar</button>}
+          </div>}
       </div>
 
       <main className="wrap">
@@ -875,7 +928,7 @@ function App(){
             stations.length === 0
               ? <div className="empty">
                   <strong>Ninguna estación coincide</strong>
-                  Limpiá el buscador, o desactivá el filtro de favoritos.
+                  Ampliá el rango de distancia, limpiá el buscador o desactivá el filtro de favoritos.
                 </div>
               : <>
                   <Spread stations={stations} fuel={fuel}/>
