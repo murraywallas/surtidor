@@ -8,48 +8,52 @@
 <meta name="theme-color" content="#0F262E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:ital,wght@0,400..700;1,400..700&family=Martian+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..900&family=Archivo+Expanded:wght@600..900&family=Martian+Mono:wght@400..800&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    /* Superficie */
-    --ink:#0E2329;
-    --ink-soft:#294A55;
-    --paper:#E7EDE9;          /* fondo suave */
-    --paper-2:#FFFFFF;        /* tarjetas: blanco nítido = más moderno */
-    --paper-3:#F2F6F4;        /* rellenos sutiles */
+    /* Mundo "Prisstander": totem de precios de ruta danés.
+       Asfalto cálido de noche + hueso de día + ámbar de sodio (el
+       resplandor del cartel) + verde ruta y rojo arcilla. */
+    --ink:#17130D;            /* asfalto cálido (ink / totem) */
+    --ink-2:#241D14;          /* superficie oscura elevada */
+    --ink-soft:#4A3E2C;
+    --paper:#E6E0D2;          /* hueso de día (fondo) */
+    --paper-2:#FCFBF6;        /* tarjetas: casi blanco cálido */
+    --paper-3:#EFE9DB;        /* rellenos sutiles */
 
-    /* Acento */
-    --signal:#FFB000;
-    --signal-deep:#E08A00;    /* estado presionado */
-    --signal-dim:#7A5712;
-    --cheap:#0E7A57;
-    --dear:#B23A28;
+    /* Acento: lámpara de sodio */
+    --signal:#FF9E12;
+    --signal-deep:#DB7A00;    /* presionado */
+    --signal-dim:#7C5312;
+    --cheap:#0C7A54;          /* verde ruta = más barata */
+    --dear:#BF4526;           /* rojo arcilla = más cara */
 
-    /* Líneas y texto (contraste revisado para WCAG AA) */
-    --line:rgba(14,35,41,.11);
-    --line-strong:rgba(14,35,41,.22);
-    --text:#0E2329;
-    --text-muted:rgba(14,35,41,.72);
-    --text-faint:rgba(14,35,41,.66);  /* ≥4.5:1 incluso a 9-10px (WCAG AA) */
+    /* Líneas y texto (contraste WCAG AA verificado) */
+    --line:rgba(23,19,13,.12);
+    --line-strong:rgba(23,19,13,.22);
+    --text:#17130D;
+    --text-muted:rgba(23,19,13,.72);
+    --text-faint:rgba(23,19,13,.64);
 
-    --display:"Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+    /* Tipografía: Archivo (foundry argentino Omnibus-Type) para todo
+       lo que se lee; Martian Mono SOLO para números/medidas. */
+    --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    --wide:"Archivo Expanded", "Archivo", "Helvetica Neue", sans-serif;
     --numeric:"Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
     /* Radios */
     --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
 
-    /* Elevación: sombras sutiles y en capas, nada de glow */
-    --shadow-1:0 1px 2px rgba(14,35,41,.05), 0 1px 1px rgba(14,35,41,.04);
-    --shadow-2:0 10px 24px -10px rgba(14,35,41,.18), 0 3px 8px -4px rgba(14,35,41,.10);
-    --shadow-pylon:0 8px 20px -8px rgba(14,35,41,.35);
+    /* Elevación: sombras con offset y desenfoque, nunca halo plano */
+    --shadow-1:0 1px 2px rgba(23,19,13,.06), 0 1px 1px rgba(23,19,13,.04);
+    --shadow-2:0 12px 28px -12px rgba(23,19,13,.22), 0 3px 8px -4px rgba(23,19,13,.10);
+    --shadow-totem:0 22px 50px -20px rgba(23,19,13,.55), 0 6px 16px -8px rgba(23,19,13,.35);
 
-    /* Movimiento: curvas propias (las nativas son flojas) */
+    /* Movimiento: curvas propias */
     --ease-out:cubic-bezier(.23,1,.32,1);
     --ease-in-out:cubic-bezier(.77,0,.175,1);
-    --dur-1:120ms;   /* feedback de presión */
-    --dur-2:180ms;   /* hover, controles */
-    --dur-3:260ms;   /* entradas */
+    --dur-1:120ms; --dur-2:180ms; --dur-3:280ms;
   }
 
   *{box-sizing:border-box;}
@@ -94,19 +98,21 @@
     display:flex;align-items:flex-start;justify-content:space-between;
     gap:20px;flex-wrap:wrap;
   }
-  .brandmark{display:flex;align-items:baseline;gap:12px;}
+  .brandmark{display:flex;align-items:baseline;gap:13px;}
   .brandmark h1{
-    margin:0;font-size:32px;font-weight:700;letter-spacing:-.025em;
+    margin:0;font-family:var(--wide);
+    font-size:34px;font-weight:800;letter-spacing:-.01em;line-height:1;
+    color:var(--paper-2);
   }
   .brandmark .sub{
-    font-family:var(--numeric);
-    font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    font-family:var(--display);
+    font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
     color:var(--signal);
   }
   .livedot{
-    display:inline-flex;align-items:center;gap:7px;
-    font-family:var(--numeric);font-size:10px;letter-spacing:.1em;
-    text-transform:uppercase;color:rgba(231,237,234,.72);
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--numeric);font-size:9.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:rgba(240,236,223,.78);
   }
   .livedot i{
     width:7px;height:7px;border-radius:50%;background:var(--signal);
@@ -141,14 +147,16 @@
 
   .pumphint{
     margin:14px 0 0;
-    font-family:var(--numeric);font-size:10px;letter-spacing:.06em;
-    color:rgba(231,237,234,.62);
+    font-family:var(--display);font-size:13px;letter-spacing:.005em;
+    color:rgba(240,236,223,.66);
   }
-  .pumphint strong{color:var(--signal);font-weight:600;}
+  .pumphint strong{
+    font-family:var(--numeric);font-size:12px;color:var(--signal);font-weight:600;
+  }
 
   /* ---------- Controls ---------- */
   .controls{
-    background:rgba(255,255,255,.85);
+    background:rgba(252,251,246,.86);
     backdrop-filter:saturate(1.4) blur(10px);
     -webkit-backdrop-filter:saturate(1.4) blur(10px);
     border-bottom:1px solid var(--line);
@@ -158,7 +166,7 @@
   .controls-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
   .search{
     flex:1 1 220px;display:flex;align-items:center;gap:9px;
-    background:#fff;border:1.5px solid var(--line-strong);
+    background:var(--paper-2);border:1.5px solid var(--line-strong);
     border-radius:var(--r-sm);padding:9px 13px;
     transition:border-color var(--dur-2) var(--ease-out),
                box-shadow var(--dur-2) var(--ease-out);
@@ -173,8 +181,9 @@
   .search:focus-within svg{color:var(--ink);}
 
   .ctl{
+    display:inline-flex;align-items:center;gap:6px;
     padding:9px 14px;border-radius:var(--r-sm);
-    border:1.5px solid var(--line-strong);background:#fff;
+    border:1.5px solid var(--line-strong);background:var(--paper-2);
     font-size:14px;font-weight:600;white-space:nowrap;color:var(--text);
     transition:background var(--dur-2) var(--ease-out),
                border-color var(--dur-2) var(--ease-out),
@@ -200,7 +209,7 @@
     @keyframes panelIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
   }
   .distrange-label{
-    font-family:var(--numeric);font-size:10px;letter-spacing:.09em;
+    font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.08em;
     text-transform:uppercase;color:var(--text-muted);
   }
   .distrange-in{
@@ -256,10 +265,7 @@
   @media (hover:hover) and (prefers-reduced-motion:reduce){
     .card:hover{border-color:var(--line-strong);box-shadow:var(--shadow-2);}
   }
-  .card.is-cheapest{
-    border-color:var(--cheap);border-width:1.5px;
-    box-shadow:var(--shadow-1), inset 3px 0 0 var(--cheap);
-  }
+  .card.is-cheapest{border-color:var(--cheap);border-width:1.5px;box-shadow:var(--shadow-1);}
   /* Entrada escalonada; corre una vez por tarjeta (no se repite al reordenar) */
   @media (prefers-reduced-motion:no-preference){
     .card{animation:cardIn var(--dur-3) var(--ease-out) backwards;
@@ -289,41 +295,30 @@
   .chainrow .logo{width:28px;height:28px;border-radius:7px;padding:2px;}
   .chainrow .logo-sigla{font-size:9px;}
   .brandname{
-    font-family:var(--numeric);font-size:10.5px;font-weight:600;
-    letter-spacing:.07em;text-transform:uppercase;
+    font-family:var(--display);font-size:11px;font-weight:700;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);
   }
-  .chip{
-    display:inline-block;padding:3px 9px;border-radius:5px;
-    font-family:var(--numeric);font-size:10px;font-weight:600;
-    letter-spacing:.06em;text-transform:uppercase;
-    background:var(--ink);color:var(--paper-2);
+  .badge-cheap,.badge-unmanned,.badge-logbuy{
+    font-family:var(--display);font-size:10px;font-weight:700;
+    letter-spacing:.04em;text-transform:uppercase;
+    padding:3px 9px;border-radius:5px;
   }
-  .badge-cheap{
-    background:var(--cheap);color:#fff;padding:3px 9px;border-radius:5px;
-    font-family:var(--numeric);font-size:10px;font-weight:600;letter-spacing:.06em;
-    text-transform:uppercase;
-  }
+  .badge-cheap{background:var(--cheap);color:#fff;}
+  .badge-logbuy{background:var(--signal);color:var(--ink);}  /* ámbar = el descuento */
   .badge-unmanned{
-    background:transparent;color:var(--ink-soft);
-    border:1px solid var(--line-strong);
-    padding:2px 8px;border-radius:5px;
-    font-family:var(--numeric);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+    background:transparent;color:var(--text-muted);
+    border:1px solid var(--line-strong);padding:2px 8px;font-weight:600;
   }
-  .badge-logbuy{
-    background:var(--cheap);color:#fff;padding:3px 9px;border-radius:5px;
-    font-family:var(--numeric);font-size:10px;font-weight:600;letter-spacing:.05em;
-    text-transform:uppercase;
-  }
-  .meta .was{text-decoration:line-through;opacity:.7;}
+  .meta .was{text-decoration:line-through;opacity:.72;}
 
   /* Links "Cómo llegar" (Google Maps / Waze) */
   .navlinks{display:flex;gap:14px;margin-top:9px;}
   .navlinks a{
     display:inline-flex;align-items:center;gap:5px;
-    font-family:var(--numeric);font-size:10px;font-weight:600;
-    letter-spacing:.05em;text-transform:uppercase;
+    font-family:var(--display);font-size:10.5px;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;
     color:var(--ink-soft);text-decoration:none;
-    padding:3px 8px;border-radius:var(--r-pill);
+    padding:4px 10px;border-radius:var(--r-pill);
     border:1px solid var(--line-strong);
     transition:color var(--dur-2) var(--ease-out),
                border-color var(--dur-2) var(--ease-out),
@@ -403,7 +398,7 @@
   .chainhead{
     display:grid;grid-template-columns:150px 1fr 92px 62px;
     gap:14px;padding:0 8px 9px;
-    font-family:var(--numeric);font-size:9.5px;letter-spacing:.1em;
+    font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.09em;
     text-transform:uppercase;color:var(--text-faint);
     border-bottom:1px solid var(--line);
   }
@@ -435,29 +430,86 @@
   }
   .chainlegend{
     display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;
-    font-family:var(--numeric);font-size:10px;letter-spacing:.05em;
-    color:var(--text-faint);
+    font-family:var(--display);font-size:11.5px;letter-spacing:.01em;
+    color:var(--text-muted);
   }
 
-  /* ---------- Spread strip ---------- */
-  .spread{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-    gap:1px;background:var(--line);
-    border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;
-    margin-bottom:4px;box-shadow:var(--shadow-1);
+  /* ---------- El totem: elemento de firma ---------- */
+  .totem{
+    position:relative;overflow:hidden;
+    display:grid;grid-template-columns:1fr auto;gap:26px;align-items:center;
+    background:var(--ink);color:var(--paper-2);
+    border-radius:var(--r-lg);padding:24px 26px;
+    box-shadow:var(--shadow-totem);
   }
-  .spread div{background:var(--paper-2);padding:14px 16px;}
-  .spread .k{
-    font-family:var(--numeric);font-size:9.5px;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--text-faint);
+  .totem::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--signal);}
+  @media (prefers-reduced-motion:no-preference){
+    .totem{animation:totemIn 420ms var(--ease-out);}
+    @keyframes totemIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
   }
-  .spread .v{
-    font-family:var(--numeric);font-size:22px;font-weight:600;margin-top:6px;
-    font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  .totem-info{display:flex;flex-direction:column;gap:15px;min-width:0;}
+  .totem-eyebrow{
+    margin:0;font-family:var(--display);
+    font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--signal);
   }
-  .spread .v small{font-size:11px;font-weight:400;opacity:.6;margin-left:4px;letter-spacing:0;}
-  .spread .v.cheap{color:var(--cheap);}
-  .spread .v.dear{color:var(--dear);}
+  .totem-brand{display:flex;align-items:center;gap:14px;min-width:0;}
+  .totem-brand .logo{width:50px;height:50px;border-radius:12px;padding:4px;}
+  .totem-id{min-width:0;}
+  .totem-name{
+    margin:0;font-family:var(--wide);font-size:23px;font-weight:800;letter-spacing:-.01em;
+    color:var(--paper-2);display:flex;align-items:center;gap:9px;flex-wrap:wrap;line-height:1.05;
+  }
+  .totem-tag{
+    font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    background:var(--signal);color:var(--ink);padding:3px 8px;border-radius:5px;
+  }
+  .totem-tag.ghost{background:transparent;color:rgba(240,236,223,.75);border:1px solid rgba(240,236,223,.3);}
+  .totem-addr{
+    margin:5px 0 0;font-size:14px;color:rgba(240,236,223,.74);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .totem-nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .totem-go{
+    font-family:var(--display);font-size:13px;font-weight:600;text-decoration:none;
+    color:var(--ink);background:var(--signal);padding:9px 17px;border-radius:var(--r-pill);
+    display:inline-flex;align-items:center;gap:7px;
+    transition:background var(--dur-2) var(--ease-out),transform var(--dur-1) var(--ease-out);
+  }
+  .totem-go span{transition:transform var(--dur-2) var(--ease-out);}
+  .totem-go:active{transform:scale(.96);}
+  .totem-go.ghost{background:transparent;color:var(--paper-2);border:1.5px solid rgba(240,236,223,.32);}
+  @media (hover:hover){
+    .totem-go:hover{background:#FFB43E;}
+    .totem-go:hover span{transform:translateX(3px);}
+    .totem-go.ghost:hover{border-color:var(--signal);color:var(--signal);}
+  }
+  .totem-board{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:196px;}
+  .totem-num{
+    font-family:var(--numeric);font-weight:800;line-height:.88;color:var(--signal);
+    letter-spacing:-.045em;font-variant-numeric:tabular-nums;
+    display:flex;align-items:baseline;font-size:clamp(56px,10vw,90px);
+    text-shadow:0 2px 30px rgba(255,158,18,.28);
+  }
+  .totem-num .frac{font-size:.6em;}
+  .totem-unit{
+    font-family:var(--numeric);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:rgba(255,158,18,.72);margin-top:2px;
+  }
+  .totem-market{
+    display:flex;gap:22px;margin:12px 0 0;padding-top:13px;
+    border-top:1px solid rgba(240,236,223,.16);
+  }
+  .totem-market div{display:flex;flex-direction:column;gap:3px;text-align:right;}
+  .totem-market dt{
+    margin:0;font-family:var(--display);font-size:9.5px;font-weight:600;
+    letter-spacing:.09em;text-transform:uppercase;color:rgba(240,236,223,.62);
+  }
+  .totem-market dd{
+    margin:0;font-family:var(--numeric);font-size:15px;font-weight:600;color:var(--paper-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .totem-market dd small{font-size:9px;opacity:.6;margin-left:2px;font-weight:400;}
+  .totem-market .save dd{color:var(--signal);}
 
   .empty{
     text-align:center;padding:64px 20px;color:var(--text-muted);
@@ -480,7 +532,15 @@
   footer a{color:inherit;}
 
   @media (max-width:640px){
-    .brandmark h1{font-size:25px;}
+    .brandmark h1{font-size:27px;}
+
+    /* Totem: se apila y el número se alinea a la izquierda */
+    .totem{grid-template-columns:1fr;gap:18px;padding:20px;}
+    .totem-board{align-items:flex-start;min-width:0;width:100%;}
+    .totem-num{font-size:clamp(54px,17vw,76px);}
+    .totem-unit{align-self:flex-start;}
+    .totem-market{width:100%;justify-content:flex-start;gap:26px;}
+    .totem-market div{text-align:left;}
 
     /* Controles: el buscador ocupa toda una fila y los botones entran
        en una sola fila más (antes el ★ se caía a una tercera). */
@@ -615,7 +675,6 @@ const FUELS = [
   {key:"95",  label:"Sin plomo 95", pump:"Blyfri 95",  type:"Autobenzin", octane:"95"},
   {key:"98",  label:"Sin plomo 98", pump:"Blyfri 98",  type:"Autobenzin", octane:"98"},
   {key:"100", label:"Octano 100",   pump:"Oktan 100",  type:"Autobenzin", octane:"100"},
-  {key:"dsl", label:"Diesel",       pump:"Diesel",     type:"Autodiesel", octane:null},
 ];
 
 const CPH = {lat:55.6761, lng:12.5683};
@@ -901,18 +960,62 @@ function ChainSummary({stations, fuel}){
   );
 }
 
-function Spread({stations, fuel}){
-  const list = stations.map(s=>priceFor(s,fuel)).filter(Boolean).map(p=>p.price);
-  if(!list.length) return null;
-  const lo=Math.min(...list), hi=Math.max(...list);
-  const avg=list.reduce((a,b)=>a+b,0)/list.length;
+/* ============================================================
+   EL TOTEM — elemento de firma
+   ------------------------------------------------------------
+   La estación más barata AHORA, mostrada como el panel iluminado
+   de un prisstander (el cartel de precios de ruta danés): la marca,
+   cómo llegar, y el número gigante en ámbar de sodio. Es la tesis
+   de la página — el dato que viniste a buscar, como el cartel real.
+   ============================================================ */
+function HeroTotem({stations, fuel}){
+  const priced = stations.map(s=>({s, p:priceFor(s,fuel)})).filter(x=>x.p);
+  if(!priced.length) return null;
+
+  const cheapest = priced.reduce((a,b)=> b.p.price < a.p.price ? b : a);
+  const prices = priced.map(x=>x.p.price);
+  const avg = prices.reduce((a,b)=>a+b,0)/prices.length;
+  const hi  = Math.max(...prices);
+  const {s, p} = cheapest;
+  const nav = navUrls(s);
+  const ahorro = Math.max(0,(avg - p.price)) * 50;   // vs. promedio, por tanque de 50 L
+  const [whole, dec] = p.price.toFixed(2).split(".");
+
   return (
-    <div className="spread">
-      <div><div className="k">Más barata</div><div className="v cheap">{kr(lo)}<small>kr/l</small></div></div>
-      <div><div className="k">Promedio</div><div className="v">{kr(avg)}<small>kr/l</small></div></div>
-      <div><div className="k">Más cara</div><div className="v dear">{kr(hi)}<small>kr/l</small></div></div>
-      <div><div className="k">Tu ahorro</div><div className="v">{kr((hi-lo)*50)}<small>kr / 50 l</small></div></div>
-    </div>
+    <section className="totem" aria-label={"Más barata ahora: " + s.brand + ", " + kr(p.price) + " coronas por litro"}>
+      <div className="totem-info">
+        <p className="totem-eyebrow">La más barata ahora · {fuel.label}</p>
+        <div className="totem-brand">
+          <LogoMarca marca={s.brand}/>
+          <div className="totem-id">
+            <h2 className="totem-name">
+              {s.brand}
+              {s.descuento > 0 && <span className="totem-tag">Logbuy −18 øre</span>}
+              {sinPersonal(s) && <span className="totem-tag ghost">sin personal</span>}
+            </h2>
+            <p className="totem-addr">{direccion(s)} · {s.postalCode} {capitalizar(s.city)}</p>
+          </div>
+        </div>
+        <div className="totem-nav">
+          <a className="totem-go" href={nav.gmaps} target="_blank" rel="noopener noreferrer">
+            Cómo llegar <span aria-hidden="true">→</span>
+          </a>
+          <a className="totem-go ghost" href={nav.waze} target="_blank" rel="noopener noreferrer">Waze</a>
+        </div>
+      </div>
+
+      <div className="totem-board">
+        <div className="totem-num" aria-hidden="true">
+          <span className="whole">{whole}</span><span className="frac">,{dec}</span>
+        </div>
+        <div className="totem-unit">kr / litro · {s.distance != null ? s.distance.toFixed(1) + " km" : "—"}</div>
+        <dl className="totem-market">
+          <div><dt>Promedio</dt><dd>{kr(avg)}</dd></div>
+          <div><dt>Más cara</dt><dd>{kr(hi)}</dd></div>
+          <div className="save"><dt>Ahorrás</dt><dd>{kr(ahorro)}<small>/ 50 L</small></dd></div>
+        </dl>
+      </div>
+    </section>
   );
 }
 
@@ -935,7 +1038,6 @@ function App(){
   const [geoState,setGeo]  = useState("idle");
   const [favs,setFavs]     = useState([]);   // solo en memoria; se pierden al recargar
   const [onlyFavs,setOnlyFavs] = useState(false);
-  const [logbuy,setLogbuy] = useState(false); // descuento Logbuy en Shell
 
   const fuel = FUELS.find(f=>f.key===fuelKey);
 
@@ -1003,9 +1105,9 @@ function App(){
   const stations = useMemo(()=>{
     const ref = origin || CPH;
     let list = raw.map(s=>{
-      /* Descuento Logbuy: baja 0,18 a todos los precios de Shell y
-         guarda el precio original para mostrarlo tachado. */
-      const conDesc = logbuy && s.brand === LOGBUY_MARCA;
+      /* Descuento Logbuy: SIEMPRE aplicado en Shell (es el que tenés).
+         Baja 0,18 a sus precios y guarda el original para tacharlo. */
+      const conDesc = s.brand === LOGBUY_MARCA;
       const prices = conDesc
         ? s.prices.map(p=>({
             ...p,
@@ -1042,7 +1144,7 @@ function App(){
       return priceFor(a,fuel).price - priceFor(b,fuel).price;
     });
     return list;
-  },[raw,query,sort,origin,fuel,onlyFavs,favs,distMin,distMax,logbuy]);
+  },[raw,query,sort,origin,fuel,onlyFavs,favs,distMin,distMax]);
 
   const cheapestId = useMemo(()=>{
     if(!stations.length) return null;
@@ -1103,12 +1205,13 @@ function App(){
                   disabled={geoState==="working"}>{geoLabel}</button>
           <button className="ctl" aria-pressed={sort==="price"}  onClick={()=>setSort("price")}>Precio</button>
           <button className="ctl" aria-pressed={sort==="distance"} onClick={()=>setSort("distance")}>Distancia</button>
-          <button className="ctl" aria-pressed={onlyFavs} onClick={()=>setOnlyFavs(v=>!v)}>
-            ★ {favs.length || ""}
-          </button>
-          <button className="ctl" aria-pressed={logbuy} onClick={()=>setLogbuy(v=>!v)}
-                  title="Tu descuento Visma Logbuy: −18 øre/l en benzin y diesel de Shell">
-            Shell −18 øre
+          <button className="ctl" aria-pressed={onlyFavs} onClick={()=>setOnlyFavs(v=>!v)}
+                  title="Mostrar solo tus favoritos">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill={onlyFavs?"currentColor":"none"}
+                 stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 3.6l2.6 5.27 5.82.85-4.21 4.1.99 5.79L12 17.87l-5.2 2.74.99-5.79-4.21-4.1 5.82-.85z"/>
+            </svg>
+            {favs.length ? <span>{favs.length}</span> : null}
           </button>
         </div>
 
@@ -1153,8 +1256,8 @@ function App(){
                   Ampliá el rango de distancia, limpiá el buscador o desactivá el filtro de favoritos.
                 </div>
               : <>
-                  <Spread stations={stations} fuel={fuel}/>
-                  <div className="list" style={{paddingTop:"14px"}}>
+                  <HeroTotem stations={stations} fuel={fuel}/>
+                  <div className="list" style={{paddingTop:"18px"}}>
                     {stations.map((s,i)=>(
                       <StationCard key={s.stationId} s={s} fuel={fuel} rank={i+1}
                                    isCheapest={s.stationId===cheapestId}
