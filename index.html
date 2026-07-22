@@ -222,6 +222,25 @@
     padding:2px 8px;border-radius:5px;
     font-family:var(--numeric);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
   }
+  .badge-logbuy{
+    background:var(--cheap);color:#fff;padding:3px 9px;border-radius:5px;
+    font-family:var(--numeric);font-size:10px;font-weight:600;letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .meta .was{text-decoration:line-through;opacity:.7;}
+
+  /* Links "Cómo llegar" (Google Maps / Waze) */
+  .navlinks{display:flex;gap:16px;margin-top:8px;}
+  .navlinks a{
+    display:inline-flex;align-items:center;gap:4px;
+    font-family:var(--numeric);font-size:10px;font-weight:600;
+    letter-spacing:.05em;text-transform:uppercase;
+    color:var(--ink-soft);text-decoration:none;
+    border-bottom:1px solid var(--line-strong);padding-bottom:1px;
+    transition:color .15s,border-color .15s;
+  }
+  .navlinks a:hover{color:var(--ink);border-color:var(--ink);}
+  .navlinks a span{color:var(--signal-dim);}
   .info h3{margin:6px 0 3px;font-size:17px;font-weight:600;letter-spacing:-.01em;}
   .info .addr{
     font-size:13.5px;color:rgba(15,38,46,.6);
@@ -496,7 +515,9 @@ function agoLabel(iso){
   if(mins < 1) return "recién";
   if(mins < 60) return "hace " + mins + " min";
   const h = Math.floor(mins/60);
-  return "hace " + h + (h===1 ? " hora" : " horas");
+  if(h < 24) return "hace " + h + (h===1 ? " hora" : " horas");
+  const d = Math.floor(h/24);
+  return "hace " + d + (d===1 ? " día" : " días");
 }
 
 const kr = n => n.toFixed(2).replace(".",",");
@@ -525,6 +546,27 @@ function capitalizar(texto){
 const direccion = s => [capitalizar(s.street), s.houseNumber].filter(Boolean).join(" ");
 
 const sinPersonal = s => SIN_PERSONAL.includes(s.brand);
+
+/* Descuento personal de Visma Logbuy en Shell: 18 øre/l en benzin y
+   diesel (= 0,18 kr). Es un beneficio tuyo, así que viene apagado y se
+   activa con el botón "Shell −18 øre". Al activarlo, el precio de Shell
+   baja 0,18 en toda la app (ranking, resumen y ahorro incluidos). */
+const LOGBUY_MARCA = "Shell";
+const LOGBUY_DESC  = 0.18;
+
+/* Links de navegación. Usamos la DIRECCIÓN (no las coordenadas) porque
+   Q8/F24 y Circle K/INGO están geolocalizadas por código postal —su
+   dirección es exacta, pero el punto en el mapa es aproximado. Google
+   Maps y Waze resuelven bien la dirección danesa en los dos casos. */
+function navUrls(s){
+  const destino = [direccion(s), s.postalCode, capitalizar(s.city), "Danmark"]
+    .filter(Boolean).join(", ");
+  const q = encodeURIComponent(destino);
+  return {
+    gmaps: "https://www.google.com/maps/dir/?api=1&destination=" + q,
+    waze:  "https://waze.com/ul?q=" + q + "&navigate=yes",
+  };
+}
 
 /* ============================================================
    3. COMPONENTES
@@ -621,6 +663,7 @@ function Pylon({value}){
 }
 function StationCard({s, fuel, rank, isCheapest, fav, onFav}){
   const p = priceFor(s, fuel);
+  const nav = navUrls(s);
   return (
     <article className={"card" + (isCheapest ? " is-cheapest" : "")}>
       <div className="rank">{String(rank).padStart(2,"0")}</div>
@@ -629,6 +672,7 @@ function StationCard({s, fuel, rank, isCheapest, fav, onFav}){
           <LogoMarca marca={s.brand}/>
           <span className="brandname">{s.brand}</span>
           {isCheapest && <span className="badge-cheap">Más barata</span>}
+          {s.descuento > 0 && <span className="badge-logbuy">Logbuy −18 øre</span>}
           {sinPersonal(s) && <span className="badge-unmanned">Sin personal</span>}
         </div>
         <h3>{direccion(s)}</h3>
@@ -636,6 +680,18 @@ function StationCard({s, fuel, rank, isCheapest, fav, onFav}){
         <div className="meta">
           {s.distance != null && <span>{s.distance.toFixed(1)} km</span>}
           {p && <span>Act. {agoLabel(p.lastUpdated)}</span>}
+          {s.descuento > 0 && p && p.precioOriginal != null &&
+            <span className="was">antes {kr(p.precioOriginal)}</span>}
+        </div>
+        <div className="navlinks">
+          <a href={nav.gmaps} target="_blank" rel="noopener noreferrer"
+             aria-label={"Navegar a " + direccion(s) + " en Google Maps"}>
+            <span aria-hidden="true">▸</span> Google Maps
+          </a>
+          <a href={nav.waze} target="_blank" rel="noopener noreferrer"
+             aria-label={"Navegar a " + direccion(s) + " en Waze"}>
+            <span aria-hidden="true">▸</span> Waze
+          </a>
         </div>
       </div>
       <div className="actions">
@@ -737,6 +793,7 @@ function App(){
   const [geoState,setGeo]  = useState("idle");
   const [favs,setFavs]     = useState([]);   // solo en memoria; se pierden al recargar
   const [onlyFavs,setOnlyFavs] = useState(false);
+  const [logbuy,setLogbuy] = useState(false); // descuento Logbuy en Shell
 
   const fuel = FUELS.find(f=>f.key===fuelKey);
 
@@ -788,7 +845,11 @@ function App(){
     setGeo("working");
     navigator.geolocation.getCurrentPosition(
       pos=>{ setOrigin({lat:pos.coords.latitude,lng:pos.coords.longitude}); setGeo("ok"); setSort("distance"); },
-      ()=> setGeo("denied"),
+      err=>{
+        // Distinguimos el motivo para dar un mensaje útil:
+        // 1 = permiso denegado · 2 = posición no disponible · 3 = timeout
+        setGeo({1:"denied", 2:"unavailable", 3:"timeout"}[err && err.code] || "denied");
+      },
       {timeout:8000, maximumAge:120000}
     );
   },[]);
@@ -799,10 +860,24 @@ function App(){
 
   const stations = useMemo(()=>{
     const ref = origin || CPH;
-    let list = raw.map(s=>({
-      ...s,
-      distance: distanceKm(ref, {lat:s.coordinates.latitude, lng:s.coordinates.longitude}),
-    }));
+    let list = raw.map(s=>{
+      /* Descuento Logbuy: baja 0,18 a todos los precios de Shell y
+         guarda el precio original para mostrarlo tachado. */
+      const conDesc = logbuy && s.brand === LOGBUY_MARCA;
+      const prices = conDesc
+        ? s.prices.map(p=>({
+            ...p,
+            price: Math.round((p.price - LOGBUY_DESC)*100)/100,
+            precioOriginal: p.price,
+          }))
+        : s.prices;
+      return {
+        ...s,
+        prices,
+        descuento: conDesc ? LOGBUY_DESC : 0,
+        distance: distanceKm(ref, {lat:s.coordinates.latitude, lng:s.coordinates.longitude}),
+      };
+    });
 
     const q = query.trim().toLowerCase();
     if(q){
@@ -825,7 +900,7 @@ function App(){
       return priceFor(a,fuel).price - priceFor(b,fuel).price;
     });
     return list;
-  },[raw,query,sort,origin,fuel,onlyFavs,favs,distMin,distMax]);
+  },[raw,query,sort,origin,fuel,onlyFavs,favs,distMin,distMax,logbuy]);
 
   const cheapestId = useMemo(()=>{
     if(!stations.length) return null;
@@ -834,7 +909,8 @@ function App(){
   },[stations,fuel]);
 
   const geoLabel = {idle:"Usar mi ubicación", working:"Buscando…", ok:"Ubicación activa",
-                    denied:"Ubicación denegada", unsupported:"No disponible"}[geoState];
+                    denied:"Ubicación denegada", unavailable:"Ubicación no disponible",
+                    timeout:"Tardó demasiado, reintentá", unsupported:"No disponible"}[geoState];
 
   return (
     <div>
@@ -887,6 +963,10 @@ function App(){
           <button className="ctl" aria-pressed={sort==="distance"} onClick={()=>setSort("distance")}>Distancia</button>
           <button className="ctl" aria-pressed={onlyFavs} onClick={()=>setOnlyFavs(v=>!v)}>
             ★ {favs.length || ""}
+          </button>
+          <button className="ctl" aria-pressed={logbuy} onClick={()=>setLogbuy(v=>!v)}
+                  title="Tu descuento Visma Logbuy: −18 øre/l en benzin y diesel de Shell">
+            Shell −18 øre
           </button>
         </div>
 
