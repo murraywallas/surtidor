@@ -1,0 +1,25 @@
+# Configuración de Netlify para Surtidor
+#
+# Con este archivo en la raíz del repo, Netlify se configura solo:
+# no hay que tocar nada en el panel al conectar GitHub.
+
+[build]
+  # El sitio es un único HTML en la raíz, no hay proceso de build
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  # Node 20: necesitamos fetch nativo y AbortSignal.timeout()
+  node_bundler = "esbuild"
+
+[functions."precios"]
+  # La función consulta 4 APIs externas en paralelo.
+  # 10 s alcanza de sobra (cada una corta a los 9 s).
+  included_files = []
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surtidor — precios de combustible en Dinamarca</title>
+<meta name="description" content="Encontrá la nafta y el diesel más baratos cerca tuyo. Precios directos de las APIs de cada petrolera.">
+<meta name="theme-color" content="#0F262E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:ital,wght@0,400..700;1,400..700&family=Martian+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#0F262E;
+    --ink-soft:#1B3A45;
+    --paper:#E7EDEA;
+    --paper-2:#F4F7F5;
+    --signal:#FFB000;
+    --signal-dim:#8A6410;
+    --cheap:#12795A;
+    --dear:#B3402F;
+    --line:rgba(15,38,46,.14);
+    --line-strong:rgba(15,38,46,.28);
+
+    --display:"Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --numeric:"Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--display);
+    font-size:16px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  #root{min-height:100vh;}
+
+  button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;}
+  input{font:inherit;color:inherit;}
+
+  :focus-visible{
+    outline:3px solid var(--signal);
+    outline-offset:2px;
+    border-radius:2px;
+  }
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    background:var(--ink);
+    color:var(--paper-2);
+    padding:22px 0 26px;
+  }
+  .masthead-row{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:20px;flex-wrap:wrap;
+  }
+  .brandmark{display:flex;align-items:baseline;gap:12px;}
+  .brandmark h1{
+    margin:0;font-size:30px;font-weight:700;letter-spacing:-.02em;
+  }
+  .brandmark .sub{
+    font-family:var(--numeric);
+    font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--signal);
+  }
+  .livedot{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:var(--numeric);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:rgba(231,237,234,.62);
+  }
+  .livedot i{
+    width:7px;height:7px;border-radius:50%;background:var(--signal);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+  /* ---------- Fuel selector ---------- */
+  .fuelbar{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;}
+  .fuelbtn{
+    padding:9px 16px;border-radius:999px;
+    border:1.5px solid rgba(231,237,234,.26);
+    color:rgba(231,237,234,.78);
+    font-size:14px;font-weight:600;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .fuelbtn:hover{border-color:rgba(231,237,234,.55);}
+  .fuelbtn[aria-pressed="true"]{
+    background:var(--signal);border-color:var(--signal);color:var(--ink);
+  }
+
+  .pumphint{
+    margin:12px 0 0;
+    font-family:var(--numeric);font-size:10px;letter-spacing:.06em;
+    color:rgba(231,237,234,.5);
+  }
+  .pumphint strong{color:var(--signal);font-weight:600;}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    background:var(--paper-2);
+    border-bottom:1px solid var(--line);
+    padding:14px 0;
+    position:sticky;top:0;z-index:20;
+  }
+  .controls-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .search{
+    flex:1 1 220px;display:flex;align-items:center;gap:9px;
+    background:#fff;border:1.5px solid var(--line-strong);
+    border-radius:8px;padding:9px 13px;
+  }
+  .search input{border:none;outline:none;background:none;width:100%;font-size:15px;}
+  .search svg{flex-shrink:0;opacity:.5;}
+
+  .ctl{
+    padding:9px 14px;border-radius:8px;
+    border:1.5px solid var(--line-strong);background:#fff;
+    font-size:14px;font-weight:600;white-space:nowrap;
+    transition:background .15s,border-color .15s;
+  }
+  .ctl:hover{border-color:var(--ink);}
+  .ctl[aria-pressed="true"]{background:var(--ink);color:var(--paper-2);border-color:var(--ink);}
+  .ctl[disabled]{opacity:.45;cursor:not-allowed;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin:28px 0 22px;}
+  .tab{
+    padding:11px 2px;margin-right:30px;
+    font-size:16px;font-weight:600;color:rgba(15,38,46,.45);
+    border-bottom:3px solid transparent;margin-bottom:-2px;
+    transition:color .15s,border-color .15s;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--signal);}
+  .tab .count{
+    font-family:var(--numeric);font-size:11px;font-weight:400;
+    opacity:.6;margin-left:6px;
+  }
+
+  /* ---------- Station card ---------- */
+  .list{display:flex;flex-direction:column;gap:10px;padding-bottom:56px;}
+  .card{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:18px;align-items:center;
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    transition:border-color .15s, transform .15s;
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .card:hover{border-color:var(--line-strong);transform:translateY(-1px);}
+  }
+  .card.is-cheapest{border-color:var(--cheap);border-width:2px;}
+
+  .rank{
+    font-family:var(--numeric);font-size:11px;font-weight:600;
+    color:rgba(15,38,46,.38);width:22px;text-align:right;
+  }
+
+  .info{min-width:0;}
+  .info .brandline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .logo{
+    width:28px;height:28px;border-radius:7px;flex-shrink:0;
+    object-fit:contain;background:#fff;
+    box-shadow:inset 0 0 0 1px var(--line);
+  }
+  .logo-sigla{
+    display:inline-flex;align-items:center;justify-content:center;
+    color:#fff;box-shadow:none;
+    font-family:var(--numeric);font-size:9px;font-weight:700;
+    letter-spacing:.01em;
+  }
+  .brandname{
+    font-family:var(--numeric);font-size:10.5px;font-weight:600;
+    letter-spacing:.07em;text-transform:uppercase;
+  }
+  .chip{
+    display:inline-block;padding:3px 9px;border-radius:5px;
+    font-family:var(--numeric);font-size:10px;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper-2);
+  }
+  .badge-cheap{
+    background:var(--cheap);color:#fff;padding:3px 9px;border-radius:5px;
+    font-family:var(--numeric);font-size:10px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .badge-unmanned{
+    background:transparent;color:var(--ink-soft);
+    border:1px solid var(--line-strong);
+    padding:2px 8px;border-radius:5px;
+    font-family:var(--numeric);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  }
+  .info h3{margin:6px 0 3px;font-size:17px;font-weight:600;letter-spacing:-.01em;}
+  .info .addr{
+    font-size:13.5px;color:rgba(15,38,46,.6);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .meta{
+    display:flex;gap:12px;margin-top:5px;
+    font-family:var(--numeric);font-size:10px;
+    color:rgba(15,38,46,.5);letter-spacing:.03em;
+  }
+
+  /* ---------- The pylon: signature element ---------- */
+  .pylon{
+    background:var(--ink);
+    border-radius:9px;
+    padding:11px 15px 9px;
+    text-align:right;
+    min-width:132px;
+    box-shadow:inset 0 0 0 1px rgba(255,176,0,.18);
+  }
+  .pylon .price{
+    font-family:var(--numeric);
+    font-weight:800;
+    font-size:27px;
+    line-height:1;
+    color:var(--signal);
+    letter-spacing:-.03em;
+    display:flex;align-items:flex-start;justify-content:flex-end;
+  }
+  .pylon .price .dec{font-size:19px;}
+  .pylon .price .last{font-size:13px;margin-top:1px;}
+  .pylon .unit{
+    font-family:var(--numeric);font-size:9px;letter-spacing:.12em;
+    color:rgba(255,176,0,.5);margin-top:6px;text-transform:uppercase;
+  }
+  .pylon.na .price{color:rgba(231,237,234,.3);font-size:19px;}
+
+  .actions{display:flex;align-items:center;gap:6px;}
+  .star{
+    font-size:19px;line-height:1;padding:6px;
+    color:rgba(15,38,46,.25);transition:color .15s;
+  }
+  .star:hover,.star.on{color:var(--signal);}
+  .star.on{color:#E09400;}
+
+  /* ---------- Chain summary ---------- */
+  .chains{display:flex;flex-direction:column;gap:2px;padding-bottom:56px;}
+  .chainhead{
+    display:grid;grid-template-columns:150px 1fr 92px 62px;
+    gap:14px;padding:0 4px 9px;
+    font-family:var(--numeric);font-size:9.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:rgba(15,38,46,.45);
+    border-bottom:1px solid var(--line);
+  }
+  .chainrow{
+    display:grid;grid-template-columns:150px 1fr 92px 62px;
+    gap:14px;align-items:center;
+    padding:13px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .chainrow .name{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;}
+  .swatch{width:9px;height:22px;border-radius:2px;background:var(--ink);flex-shrink:0;}
+  .bartrack{position:relative;height:22px;background:rgba(15,38,46,.06);border-radius:3px;overflow:hidden;}
+  .barspan{
+    position:absolute;top:0;bottom:0;
+    background:linear-gradient(90deg, var(--cheap), var(--signal));
+    border-radius:3px;opacity:.85;
+  }
+  .barpoint{
+    position:absolute;top:-3px;bottom:-3px;width:2.5px;background:var(--ink);border-radius:2px;
+  }
+  .chainrow .avg{
+    font-family:var(--numeric);font-size:15px;font-weight:600;text-align:right;
+  }
+  .chainrow .n{
+    font-family:var(--numeric);font-size:11px;color:rgba(15,38,46,.5);text-align:right;
+  }
+  .chainlegend{
+    display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;
+    font-family:var(--numeric);font-size:10px;letter-spacing:.05em;
+    color:rgba(15,38,46,.5);
+  }
+
+  /* ---------- Spread strip ---------- */
+  .spread{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    margin-bottom:4px;
+  }
+  .spread div{background:var(--paper-2);padding:13px 16px;}
+  .spread .k{
+    font-family:var(--numeric);font-size:9.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:rgba(15,38,46,.5);
+  }
+  .spread .v{font-family:var(--numeric);font-size:21px;font-weight:600;margin-top:5px;}
+  .spread .v small{font-size:11px;font-weight:400;opacity:.55;margin-left:4px;}
+  .spread .v.cheap{color:var(--cheap);}
+  .spread .v.dear{color:var(--dear);}
+
+  .empty{
+    text-align:center;padding:64px 20px;color:rgba(15,38,46,.55);
+    border:1.5px dashed var(--line-strong);border-radius:12px;
+  }
+  .empty strong{display:block;font-size:18px;color:var(--ink);margin-bottom:7px;}
+
+  .banner{
+    background:var(--signal);color:var(--ink);
+    padding:10px 0;font-size:13.5px;
+  }
+  .banner .wrap{display:flex;gap:9px;align-items:center;justify-content:center;text-align:center;flex-wrap:wrap;}
+  .banner strong{font-weight:700;}
+
+  footer{
+    border-top:1px solid var(--line);padding:22px 0 40px;
+    font-size:12.5px;color:rgba(15,38,46,.55);
+  }
+  footer a{color:inherit;}
+
+  @media (max-width:640px){
+    .brandmark h1{font-size:24px;}
+
+    /* Controles: el buscador ocupa toda una fila y los botones entran
+       en una sola fila más (antes el ★ se caía a una tercera). */
+    .controls-row{gap:7px;}
+    .search{flex:1 1 100%;}
+    .ctl{padding:8px 11px;font-size:13px;}
+
+    /* Tarjeta: el precio y la estrella se apilan a la derecha en una
+       columna angosta, para que la info de la estación gane ancho y
+       la marca deje de romperse en tres líneas. */
+    .card{grid-template-columns:1fr auto;gap:12px;padding:13px 14px;}
+    .rank{display:none;}
+    .actions{flex-direction:column-reverse;align-items:flex-end;gap:8px;}
+    .pylon{min-width:104px;padding:9px 12px 8px;}
+    .pylon .price{font-size:23px;}
+
+    .chainhead,.chainrow{grid-template-columns:104px 1fr 76px;}
+    .chainhead span:last-child,.chainrow .n{display:none;}
+    .tab{margin-right:20px;font-size:15px;}
+  }
+
+  /* Teléfonos muy angostos (iPhone SE y similares) */
+  @media (max-width:360px){
+    .ctl{padding:8px 9px;font-size:12px;}
+    .pylon{min-width:96px;}
+    .pylon .price{font-size:21px;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const {useState,useMemo,useEffect,useCallback} = React;
+
+/* ============================================================
+   1. ORIGEN DE DATOS
+   ------------------------------------------------------------
+   La app pega contra la función de Netlify, que junta y normaliza
+   las APIs de cada petrolera. Si la función no responde (por
+   ejemplo si subiste solo el HTML por Netlify Drop, sin funciones),
+   cae a los datos de ejemplo y lo avisa en pantalla.
+   ============================================================ */
+const USE_LIVE = true;
+const LIVE_ENDPOINT = "/.netlify/functions/precios";
+
+/* Cadenas sin personal en el surtidor. Las APIs no lo informan,
+   así que lo deducimos de la marca: son cadenas enteramente
+   automáticas. Suelen ser las más baratas. */
+const SIN_PERSONAL = ["Uno-X", "OIL!", "Go'on", "Ingo", "INGO", "F24"];
+
+/* Datos de ejemplo, solo como respaldo. La estructura sigue 1:1
+   el esquema que devuelve la función de Netlify.
+
+   OJO: estos nombres de campo NO se traducen. Vienen tal cual
+   de las APIs oficiales; si los cambiás, se rompe el mapeo. */
+const DEMO = [
+  ["ST-Q8-014","Q8","Q8 Danmark A/S","Jagtvej","155","2200","København N",55.6975,12.5450,false,16.49,17.99,16.29],
+  ["ST-OK-221","OK","OK a.m.b.a.","Nørrebrogade","209","2200","København N",55.7010,12.5395,false,16.39,17.89,16.19],
+  ["ST-CK-087","Circle K","Circle K Danmark A/S","Lyngbyvej","62","2100","København Ø",55.7143,12.5648,false,16.69,18.19,16.49],
+  ["ST-SH-042","Shell","Dansk Shell A/S","Østerbrogade","226","2100","København Ø",55.7183,12.5760,false,16.79,18.29,16.59],
+  ["ST-F24-011","F24","F24 A/S","Jagtvej","227","2100","København Ø",55.7085,12.5645,true,15.89,null,15.69],
+  ["ST-UX-155","Uno-X","Uno-X Mobility","Amagerbrogade","226","2300","København S",55.6520,12.6100,true,15.49,null,15.29],
+  ["ST-OIL-063","OIL!","OIL! tank & go","Sydhavnsgade","24","2450","København SV",55.6520,12.5450,true,15.59,null,15.39],
+  ["ST-GO-028","Go'on","Go'on Gruppen A/S","Vigerslev Allé","96","2500","Valby",55.6570,12.5100,true,15.69,null,15.49],
+  ["ST-IN-091","Ingo","Ingo Danmark","Finsensvej","80","2000","Frederiksberg",55.6820,12.5140,true,15.79,null,15.59],
+  ["ST-CK-102","Circle K","Circle K Danmark A/S","Åboulevard","15","1960","Frederiksberg C",55.6820,12.5510,false,16.59,18.09,16.39],
+  ["ST-Q8-033","Q8","Q8 Danmark A/S","Vesterbrogade","148","1620","København V",55.6690,12.5420,false,16.59,18.09,16.39],
+  ["ST-OK-198","OK","Bregnerød Auto ApS","Njalsgade","21","2300","København S",55.6620,12.5820,false,16.29,null,16.09],
+  ["ST-SH-077","Shell","Dansk Shell A/S","Tuborgvej","185","2400","København NV",55.7180,12.5340,false,16.69,18.19,16.49],
+  ["ST-UX-201","Uno-X","Uno-X Mobility","Herlev Hovedgade","68","2730","Herlev",55.7220,12.4400,true,15.39,null,15.19],
+  ["ST-OIL-118","OIL!","OIL! tank & go","Gammel Køge Landevej","253","2650","Hvidovre",55.6300,12.4900,true,15.49,null,15.29],
+  ["ST-CK-140","Circle K","Circle K Danmark A/S","Gladsaxevej","100","2860","Søborg",55.7370,12.4970,false,16.49,17.99,16.29],
+  ["ST-F24-047","F24","F24 A/S","Roskildevej","271","2610","Rødovre",55.6690,12.4530,true,15.99,null,15.79],
+  ["ST-OK-256","OK","OK a.m.b.a.","Lyngby Hovedgade","90","2800","Kgs. Lyngby",55.7700,12.5030,false,16.39,17.89,16.19],
+  ["ST-GO-052","Go'on","Go'on Gruppen A/S","Hovedvejen","120","2600","Glostrup",55.6650,12.4020,true,15.59,null,15.39],
+  ["ST-Q8-071","Q8","Q8 Danmark A/S","Amager Landevej","145","2770","Kastrup",55.6300,12.6300,false,16.69,18.19,16.49],
+  ["ST-SH-119","Shell","Dansk Shell A/S","Motorring 3","2","2730","Herlev",55.7290,12.4260,false,17.49,18.99,17.29],
+  ["ST-IN-134","Ingo","Ingo Danmark","Ballerup Byvej","240","2750","Ballerup",55.7310,12.3630,true,15.69,null,15.49],
+  ["ST-UX-176","Uno-X","Uno-X Mobility","Park Allé","350","2605","Brøndby",55.6520,12.4130,true,15.49,null,15.29],
+  ["ST-OK-303","OK","Hellerup Service ApS","Strandvejen","165","2900","Hellerup",55.7350,12.5750,false,16.59,18.09,16.39],
+];
+
+function buildDemo(){
+  const now = Date.now();
+  return DEMO.map(([id,brand,owner,street,hn,pc,city,lat,lng,unmanned,p95,p98,dsl],i)=>{
+    const stamp = new Date(now - (7 + (i*13)%160)*60000).toISOString();
+    const prices = [];
+    if(p95!=null) prices.push({fuelType:"Autobenzin",octane:"95",productName:"Blyfri 95",price:p95,currency:"DKK",lastUpdated:stamp});
+    if(p98!=null) prices.push({fuelType:"Autobenzin",octane:"98",productName:"Blyfri 98",price:p98,currency:"DKK",lastUpdated:stamp});
+    if(dsl!=null) prices.push({fuelType:"Autodiesel",octane:null,productName:"Diesel",price:dsl,currency:"DKK",lastUpdated:stamp});
+    return {stationId:id,brand,owner,street,houseNumber:hn,postalCode:pc,city,
+      coordinates:{latitude:lat,longitude:lng}, unmanned, prices};
+  });
+}
+
+/* ============================================================
+   2. FUNCIONES AUXILIARES
+   ------------------------------------------------------------
+   priceFor  → saca el precio de un combustible en una estación
+   distanceKm → distancia en línea recta (fórmula de Haversine)
+   agoLabel  → "hace 12 min" a partir de una fecha ISO
+   kr        → formato danés: coma decimal, dos decimales
+   ============================================================ */
+/* Los `label` son lo que se ve en las pestañas. Los `pump` son el
+   nombre que vas a encontrar escrito en el surtidor cuando llegues:
+   los mostramos abajo para que no tengas que adivinar. */
+const FUELS = [
+  {key:"95",  label:"Sin plomo 95", pump:"Blyfri 95",  type:"Autobenzin", octane:"95"},
+  {key:"98",  label:"Sin plomo 98", pump:"Blyfri 98",  type:"Autobenzin", octane:"98"},
+  {key:"100", label:"Octano 100",   pump:"Oktan 100",  type:"Autobenzin", octane:"100"},
+  {key:"dsl", label:"Diesel",       pump:"Diesel",     type:"Autodiesel", octane:null},
+];
+
+const CPH = {lat:55.6761, lng:12.5683};
+
+/* Una estación puede vender DOS variantes del mismo combustible.
+   Shell, por ejemplo, tiene FuelSave Diesel y V-Power Diesel: los dos
+   son "Autodiesel", pero el segundo es gama alta y cuesta un peso más.
+
+   Si nos quedáramos con el primero que aparece, la app mostraría el
+   caro y toda la comparación quedaría mal. Así que: primero filtramos
+   los premium, y entre los que quedan elegimos el más barato. Si una
+   estación SOLO vende premium, lo usamos igual — mejor eso que dejarla
+   afuera de la lista. */
+function priceFor(station, fuel){
+  const matches = station.prices.filter(p =>
+    p.fuelType === fuel.type &&
+    (fuel.octane === null ? true : String(p.octane) === fuel.octane));
+
+  if(!matches.length) return null;
+
+  const estandar = matches.filter(p => !p.premium);
+  const pool = estandar.length ? estandar : matches;
+  return pool.reduce((a,b) => (b.price < a.price ? b : a));
+}
+
+function distanceKm(a,b){
+  const R=6371, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+  const x=Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+function agoLabel(iso){
+  const mins = Math.round((Date.now()-new Date(iso).getTime())/60000);
+  if(mins < 1) return "recién";
+  if(mins < 60) return "hace " + mins + " min";
+  const h = Math.floor(mins/60);
+  return "hace " + h + (h===1 ? " hora" : " horas");
+}
+
+const kr = n => n.toFixed(2).replace(".",",");
+
+/* Shell manda las direcciones en MAYÚSCULAS ("VASBYGADE 13",
+   "KØBENHAVN SV"). Las bajamos solo si vienen todas en mayúscula,
+   para no romper nombres que ya vienen bien escritos.
+
+   Excepción: el sufijo de distrito danés va en mayúscula
+   (København SV, Odense C, Aarhus N), así que dejamos intacta la
+   última palabra si tiene una o dos letras. */
+function capitalizar(texto){
+  const t = String(texto || "").trim();
+  if(!t || t !== t.toUpperCase()) return t;
+
+  const palabras = t.toLowerCase().split(/\s+/);
+  return palabras.map((p,i)=>{
+    const esUltima = i === palabras.length - 1;
+    if(esUltima && /^[a-zæøå]{1,2}$/.test(p)) return p.toUpperCase();
+    return p.replace(/(^|[\-/.])([\wæøå])/g, (m,sep,c)=>sep+c.toUpperCase());
+  }).join(" ");
+}
+
+/* Shell deja houseNumber vacío y mete todo en street; OK los separa.
+   Esto arma una sola línea limpia en los dos casos. */
+const direccion = s => [capitalizar(s.street), s.houseNumber].filter(Boolean).join(" ");
+
+const sinPersonal = s => SIN_PERSONAL.includes(s.brand);
+
+/* ============================================================
+   3. COMPONENTES
+   ------------------------------------------------------------
+   Todos los textos visibles están acá adentro, en español.
+   ============================================================ */
+
+/* ============================================================
+   LOGOS DE LAS CADENAS
+   ------------------------------------------------------------
+   Los logos NO vienen en el repo. Son marcas registradas y no me
+   corresponde redibujarlas. Pero mostrar el logo de una cadena
+   junto a sus propias estaciones es uso legítimo —es exactamente
+   lo que hacen benzinpriserne, tankpriser y Google Maps—, así que
+   acá está el mecanismo listo para que los sumes vos.
+
+   Para activarlos:
+     1. Creá una carpeta `logos/` en la raíz del repo.
+     2. Bajá el logo oficial de cada cadena (casi todas lo publican
+        en su sección de prensa: buscá "presse" o "media kit" en su
+        web) y guardalo con el nombre de archivo de la tabla.
+     3. Nada más. La app los levanta sola.
+
+   Mientras no estén, cada cadena se dibuja con una placa de color
+   e iniciales, así la app se ve terminada desde el minuto cero.
+
+   Sobre los colores: son elección mía, pensados para que el
+   conjunto se distinga bien de un vistazo. NO son los colores
+   corporativos oficiales de cada marca. Si querés fidelidad,
+   cambialos acá —una línea por cadena. */
+const MARCAS = {
+  "OK":       {archivo:"ok.png",      color:"#B3402F", sigla:"OK"},
+  "Shell":    {archivo:"shell.webp",  color:"#C99A00", sigla:"SH"},
+  "Q8":       {archivo:"q8.svg",      color:"#7A3E8F", sigla:"Q8"},
+  "F24":      {archivo:"f24.svg",     color:"#2E6FA8", sigla:"F24"},
+  "Circle K": {archivo:"circlek.svg", color:"#D0563C", sigla:"CK"},
+  "Uno-X":    {archivo:"unox.svg",    color:"#1F6F5C", sigla:"UX"},
+  "OIL!":     {archivo:"oil.svg",     color:"#8C4A6B", sigla:"OIL"},
+  "Go'on":    {archivo:"goon.svg",    color:"#3B6E3F", sigla:"GO"},
+  "INGO":     {archivo:"ingo.svg",    color:"#4A5A9E", sigla:"IN"},
+  "Ingo":     {archivo:"ingo.svg",    color:"#4A5A9E", sigla:"IN"},
+};
+
+/* Si el archivo no existe todavía, `onError` nos avisa y caemos en
+   la placa de iniciales sin que se vea ningún ícono roto.
+
+   Va con aria-hidden porque el nombre de la cadena ya está al lado
+   como texto: un lector de pantalla no necesita escucharlo dos veces. */
+function LogoMarca({marca}){
+  const [sinArchivo, setSinArchivo] = useState(false);
+
+  const m = MARCAS[marca] || {
+    archivo: null,
+    color: "#1B3A45",
+    sigla: String(marca || "?").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase(),
+  };
+
+  if(!m.archivo || sinArchivo){
+    return (
+      <span className="logo logo-sigla" style={{background:m.color}} aria-hidden="true">
+        {m.sigla}
+      </span>
+    );
+  }
+
+  return (
+    <img className="logo" src={"logos/" + m.archivo} alt="" aria-hidden="true"
+         onError={()=>setSinArchivo(true)}/>
+  );
+}
+
+/* Elemento de firma del diseño: el precio compuesto como el
+   cartel de un surtidor de ruta. El último decimal va más
+   chico, igual que en los carteles daneses de verdad. */
+function Pylon({value}){
+  if(value == null) return (
+    <div className="pylon na">
+      <div className="price">—</div>
+      <div className="unit">no disponible</div>
+    </div>
+  );
+  const s = value.toFixed(2);
+  const [whole, dec] = s.split(".");
+  return (
+    <div className="pylon">
+      <div className="price" aria-label={kr(value) + " coronas por litro"}>
+        <span>{whole}</span>
+        <span className="dec">,{dec[0]}</span>
+        <span className="last">{dec[1]}</span>
+      </div>
+      <div className="unit">kr / litro</div>
+    </div>
+  );
+}
+function StationCard({s, fuel, rank, isCheapest, fav, onFav}){
+  const p = priceFor(s, fuel);
+  return (
+    <article className={"card" + (isCheapest ? " is-cheapest" : "")}>
+      <div className="rank">{String(rank).padStart(2,"0")}</div>
+      <div className="info">
+        <div className="brandline">
+          <LogoMarca marca={s.brand}/>
+          <span className="brandname">{s.brand}</span>
+          {isCheapest && <span className="badge-cheap">Más barata</span>}
+          {sinPersonal(s) && <span className="badge-unmanned">Sin personal</span>}
+        </div>
+        <h3>{direccion(s)}</h3>
+        <div className="addr">{s.postalCode} {capitalizar(s.city)}{s.owner && s.owner !== s.brand ? " · " + s.owner : ""}</div>
+        <div className="meta">
+          {s.distance != null && <span>{s.distance.toFixed(1)} km</span>}
+          {p && <span>Act. {agoLabel(p.lastUpdated)}</span>}
+        </div>
+      </div>
+      <div className="actions">
+        <button className={"star" + (fav ? " on" : "")}
+                onClick={()=>onFav(s.stationId)}
+                aria-pressed={fav}
+                aria-label={(fav?"Quitar de":"Guardar en") + " favoritos: " + s.brand + " " + s.street}>
+          {fav ? "★" : "☆"}
+        </button>
+        <Pylon value={p ? p.price : null}/>
+      </div>
+    </article>
+  );
+}
+
+function ChainSummary({stations, fuel}){
+  const rows = useMemo(()=>{
+    const by = {};
+    stations.forEach(s=>{
+      const p = priceFor(s, fuel);
+      if(!p) return;
+      (by[s.brand] = by[s.brand] || []).push(p.price);
+    });
+    const out = Object.entries(by).map(([brand,list])=>({
+      brand,
+      n:list.length,
+      min:Math.min(...list),
+      max:Math.max(...list),
+      avg:list.reduce((a,b)=>a+b,0)/list.length,
+    }));
+    return out.sort((a,b)=>a.avg-b.avg);
+  },[stations,fuel]);
+
+  if(!rows.length) return <div className="empty"><strong>No hay cadenas para mostrar</strong>Probá con otro combustible.</div>;
+
+  const lo = Math.min(...rows.map(r=>r.min));
+  const hi = Math.max(...rows.map(r=>r.max));
+  const span = (hi-lo) || 1;
+  const pct = v => ((v-lo)/span)*100;
+
+  return (
+    <div>
+      <div className="chains">
+        <div className="chainhead">
+          <span>Cadena</span><span>Rango de precios</span><span>Promedio</span><span>Estaciones</span>
+        </div>
+        {rows.map(r=>(
+          <div className="chainrow" key={r.brand}>
+            <div className="name"><LogoMarca marca={r.brand}/>{r.brand}</div>
+            <div className="bartrack">
+              <div className="barspan" style={{left:pct(r.min)+"%", width:Math.max(pct(r.max)-pct(r.min),1.5)+"%"}}/>
+              <div className="barpoint" style={{left:pct(r.avg)+"%"}} title={"Promedio " + kr(r.avg)}/>
+            </div>
+            <div className="avg">{kr(r.avg)}</div>
+            <div className="n">{r.n}</div>
+          </div>
+        ))}
+      </div>
+      <div className="chainlegend">
+        <span>Barra = de la estación más barata a la más cara</span>
+        <span>Línea = promedio</span>
+        <span>Escala {kr(lo)} – {kr(hi)} kr/l</span>
+      </div>
+    </div>
+  );
+}
+
+function Spread({stations, fuel}){
+  const list = stations.map(s=>priceFor(s,fuel)).filter(Boolean).map(p=>p.price);
+  if(!list.length) return null;
+  const lo=Math.min(...list), hi=Math.max(...list);
+  const avg=list.reduce((a,b)=>a+b,0)/list.length;
+  return (
+    <div className="spread">
+      <div><div className="k">Más barata</div><div className="v cheap">{kr(lo)}<small>kr/l</small></div></div>
+      <div><div className="k">Promedio</div><div className="v">{kr(avg)}<small>kr/l</small></div></div>
+      <div><div className="k">Más cara</div><div className="v dear">{kr(hi)}<small>kr/l</small></div></div>
+      <div><div className="k">Tu ahorro</div><div className="v">{kr((hi-lo)*50)}<small>kr / 50 l</small></div></div>
+    </div>
+  );
+}
+
+/* ============================================================
+   4. APP PRINCIPAL
+   ============================================================ */
+function App(){
+  const [raw,setRaw]       = useState([]);
+  const [loading,setLoad]  = useState(true);
+  const [error,setError]   = useState(null);
+  const [fuentes,setFuentes] = useState([]);   // qué cadenas respondieron
+  const [enVivo,setEnVivo] = useState(false);  // false = estamos con datos de ejemplo
+  const [fuelKey,setFuel]  = useState("95");
+  const [tab,setTab]       = useState("stations");
+  const [sort,setSort]     = useState("price");
+  const [query,setQuery]   = useState("");
+  const [origin,setOrigin] = useState(null);
+  const [geoState,setGeo]  = useState("idle");
+  const [favs,setFavs]     = useState([]);   // solo en memoria; se pierden al recargar
+  const [onlyFavs,setOnlyFavs] = useState(false);
+
+  const fuel = FUELS.find(f=>f.key===fuelKey);
+
+  /* No todas las cadenas venden todo. OK ofrece 95, diesel y Oktan 100
+     pero no 98; Shell tiene 98 pero no 100. Mostrar una pestaña que
+     siempre da lista vacía es ruido, así que solo dejamos las que
+     alguna estación realmente vende. */
+  const combustibles = useMemo(()=>{
+    const disponibles = FUELS.filter(f => raw.some(s => priceFor(s, f)));
+    return disponibles.length ? disponibles : FUELS;
+  },[raw]);
+
+  useEffect(()=>{
+    if(combustibles.length && !combustibles.some(f=>f.key===fuelKey)){
+      setFuel(combustibles[0].key);
+    }
+  },[combustibles,fuelKey]);
+
+  useEffect(()=>{
+    let alive = true;
+    (async ()=>{
+      if(USE_LIVE){
+        try{
+          const res = await fetch(LIVE_ENDPOINT);
+          if(!res.ok) throw new Error("La función respondió " + res.status);
+          const data = await res.json();
+          const lista = data.stations || (Array.isArray(data) ? data : []);
+          if(!lista.length) throw new Error("La función no devolvió estaciones");
+          if(alive){
+            setRaw(lista);
+            setFuentes(data.fuentes || []);
+            setEnVivo(true);
+            setLoad(false);
+          }
+          return;
+        }catch(e){
+          // No cortamos: mostramos los datos de ejemplo y avisamos por qué
+          if(alive) setError(e.message);
+        }
+      }
+      await new Promise(r=>setTimeout(r,160));
+      if(alive){ setRaw(buildDemo()); setEnVivo(false); setLoad(false); }
+    })();
+    return ()=>{alive=false;};
+  },[]);
+
+  const locate = useCallback(()=>{
+    if(!navigator.geolocation){ setGeo("unsupported"); return; }
+    setGeo("working");
+    navigator.geolocation.getCurrentPosition(
+      pos=>{ setOrigin({lat:pos.coords.latitude,lng:pos.coords.longitude}); setGeo("ok"); setSort("distance"); },
+      ()=> setGeo("denied"),
+      {timeout:8000, maximumAge:120000}
+    );
+  },[]);
+
+  const toggleFav = useCallback(id=>{
+    setFavs(f => f.includes(id) ? f.filter(x=>x!==id) : [...f,id]);
+  },[]);
+
+  const stations = useMemo(()=>{
+    const ref = origin || CPH;
+    let list = raw.map(s=>({
+      ...s,
+      distance: distanceKm(ref, {lat:s.coordinates.latitude, lng:s.coordinates.longitude}),
+    }));
+
+    const q = query.trim().toLowerCase();
+    if(q){
+      list = list.filter(s =>
+        (s.city + " " + s.postalCode + " " + s.street + " " + s.brand).toLowerCase().includes(q));
+    }
+    if(onlyFavs) list = list.filter(s=>favs.includes(s.stationId));
+
+    list = list.filter(s => priceFor(s,fuel));
+
+    list.sort((a,b)=>{
+      if(sort==="distance") return a.distance-b.distance;
+      return priceFor(a,fuel).price - priceFor(b,fuel).price;
+    });
+    return list;
+  },[raw,query,sort,origin,fuel,onlyFavs,favs]);
+
+  const cheapestId = useMemo(()=>{
+    if(!stations.length) return null;
+    return stations.reduce((best,s)=>
+      priceFor(s,fuel).price < priceFor(best,fuel).price ? s : best, stations[0]).stationId;
+  },[stations,fuel]);
+
+  const geoLabel = {idle:"Usar mi ubicación", working:"Buscando…", ok:"Ubicación activa",
+                    denied:"Ubicación denegada", unsupported:"No disponible"}[geoState];
+
+  return (
+    <div>
+      {!enVivo && !loading &&
+        <div className="banner"><div className="wrap">
+          <strong>Datos de ejemplo.</strong>
+          <span>{error ? "No se pudieron traer los precios reales: " + error : "La función de Netlify todavía no está corriendo."}</span>
+        </div></div>}
+
+      <header className="masthead">
+        <div className="wrap">
+          <div className="masthead-row">
+            <div className="brandmark">
+              <h1>Surtidor</h1>
+              <span className="sub">Combustible · Dinamarca</span>
+            </div>
+            <span className="livedot">
+              <i/>
+              {enVivo
+                ? fuentes.filter(f=>f.ok).map(f=>f.marca).join(" · ") || "Live"
+                : "Datos de ejemplo"}
+            </span>
+          </div>
+          <div className="fuelbar" role="group" aria-label="Elegí el combustible">
+            {combustibles.map(f=>(
+              <button key={f.key} className="fuelbtn"
+                      aria-pressed={fuelKey===f.key}
+                      title={"En el surtidor figura como: " + f.pump}
+                      onClick={()=>setFuel(f.key)}>{f.label}</button>
+            ))}
+          </div>
+          <p className="pumphint">
+            En el surtidor lo vas a ver como <strong>{fuel.pump}</strong>
+          </p>
+        </div>
+      </header>
+
+      <div className="controls">
+        <div className="wrap controls-row">
+          <label className="search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+            </svg>
+            <input value={query} onChange={e=>setQuery(e.target.value)}
+                   placeholder="Buscar ciudad, código postal o calle" aria-label="Buscar"/>
+          </label>
+          <button className="ctl" onClick={locate}
+                  disabled={geoState==="working"}>{geoLabel}</button>
+          <button className="ctl" aria-pressed={sort==="price"}  onClick={()=>setSort("price")}>Precio</button>
+          <button className="ctl" aria-pressed={sort==="distance"} onClick={()=>setSort("distance")}>Distancia</button>
+          <button className="ctl" aria-pressed={onlyFavs} onClick={()=>setOnlyFavs(v=>!v)}>
+            ★ {favs.length || ""}
+          </button>
+        </div>
+      </div>
+
+      <main className="wrap">
+        <div className="tabs" role="tablist">
+          <button className="tab" role="tab" aria-selected={tab==="stations"} onClick={()=>setTab("stations")}>
+            Estaciones<span className="count">{stations.length}</span>
+          </button>
+          <button className="tab" role="tab" aria-selected={tab==="chains"} onClick={()=>setTab("chains")}>
+            Cadenas
+          </button>
+        </div>
+
+        {loading && <div className="empty"><strong>Trayendo precios…</strong>Un momento.</div>}
+
+        {!loading && <>
+          {tab==="stations" ? (
+            stations.length === 0
+              ? <div className="empty">
+                  <strong>Ninguna estación coincide</strong>
+                  Limpiá el buscador, o desactivá el filtro de favoritos.
+                </div>
+              : <>
+                  <Spread stations={stations} fuel={fuel}/>
+                  <div className="list" style={{paddingTop:"14px"}}>
+                    {stations.map((s,i)=>(
+                      <StationCard key={s.stationId} s={s} fuel={fuel} rank={i+1}
+                                   isCheapest={s.stationId===cheapestId}
+                                   fav={favs.includes(s.stationId)}
+                                   onFav={toggleFav}/>
+                    ))}
+                  </div>
+                </>
+          ) : (
+            <ChainSummary stations={stations} fuel={fuel}/>
+          )}
+        </>}
+      </main>
+
+      <footer>
+        <div className="wrap">
+          Los precios vienen de las APIs públicas de cada petrolera, según el § 16 a de la prismærkningsbekendtgørelse.
+          Confirmá siempre el precio en el surtidor antes de cargar.
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
